@@ -1,0 +1,120 @@
+   1              	# 1 "startup/f4_reset.S"
+   1              	/* 
+   1              	...
+   0              	
+   0              	
+   2              	 * file: f4_reset.S
+   3              	 */
+   4              	
+   5              	  .include "macros.inc"
+   1              	# file: macros.inc
+   2              	
+  34              	  .list
+   6              	  
+   7              	  SET_TARGET
+   8              	
+   9              	  .text
+  10              	  
+  11              	  FUNCTION Reset_Handler,global
+  12              	
+  13              	    /* Copy the data segment initializers from flash to SRAM */  
+  14 0000 1649     	    ldr	r1, =__etext		// from start
+  15 0002 174A     	    ldr	r2, =__data_start__	// to start
+  16 0004 174B     	    ldr	r3, =__data_end__	// to end
+  17              	
+  18              	    loop_data:
+  19 0006 9A42     	      cmp	r2, r3
+  20 0008 BEBF     	      ittt	lt
+  21 000a 51F8040B 	      ldrlt	r0, [r1], #4
+  22 000e 42F8040B 	      strlt	r0, [r2], #4
+  23 0012 F8E7     	      blt	loop_data
+  24              	      
+  25 0014 0020     	    movs    r0, #0
+  26 0016 1449     	    ldr     r1, =__bss_start__
+  27 0018 144A     	    ldr     r2, =__bss_end__
+  28              	
+  29              	    bloop:
+  30 001a 9142     	      cmp     r1, r2
+  31 001c 3CBF     	      itt     lo
+  32 001e 41F8040B 	      strlo   r0, [r1], #4
+  33 0022 FAE7     	      blo     bloop
+  34              	    
+  35 0024 FFF7FEFF 	    bl __libc_init_array
+  36              	
+  37 0028 DFF82C00 	    ldr	r0, .Lfini
+  38 002c FFF7FEFF 	    bl	atexit
+  39              	
+  40              	    .weak SystemInit
+  41 0030 0F48     	    ldr	r0,=SystemInit
+  42 0032 0028     	    cmp	r0,#0
+  43 0034 18BF     	    it	ne
+  44 0036 8047     	    blxne	r0
+  45              	    
+  46 0038 0E4B     	    ldr	  r3,=0xe000ed14
+  47 003a 4FF01802 	    ldr   r2,=((1<<4) | (1<<3))
+  48 003e 1A60     	    str   r2,[r3]
+  49              	
+  50              	    /*
+  51              	     *  AP - Spring 2016
+  52              	     *  Temporary code to support features for Labs
+  53              	     *  Enable all gpio clocks
+  54              	     */
+  55              	
+  56              	      .equ RCC_BASE,0x40023800
+  57              	      .equ RCC_AHB1ENR,0x30		/* AHB1 peripheral clock enable register */
+  58              	
+  59              	      .equ RCC_AHB1ENR_GPIOA_EN,(1<<0)
+  60              	      .equ RCC_AHB1ENR_GPIOB_EN,(1<<1)
+  61              	      .equ RCC_AHB1ENR_GPIOC_EN,(1<<2)
+  62              	      .equ RCC_AHB1ENR_GPIOD_EN,(1<<3)
+  63              	      .equ RCC_AHB1ENR_GPIOE_EN,(1<<4)
+  64              	     
+  65 0040 0D4B     	    ldr r3,=RCC_BASE
+  66 0042 196B     	    ldr r1,[r3, #RCC_AHB1ENR]
+  67 0044 4FF01F02 	    mov r2,#0b11111			/* enable all clocks */
+  68 0048 41EA0201 	    orr r1,r2
+  69 004c 1963     	    str r1,[r3, #RCC_AHB1ENR]
+  70              	    
+  71 004e FFF7FEFF 	    bl  main
+  72              		
+  73 0052 FFF7FEFF 	    bl  exit
+  74              		
+  75 0056 7047     	    bx  lr
+  76              	
+  77 0058 00000000 	  .Lfini:  .word	_fini
+  78              	      
+  79 005c 00000000 	  ENDFUNC Reset_Handler
+  79      00000000 
+  79      00000000 
+  79      00000000 
+  79      00000000 
+  80              	
+  81              	  .end...
+DEFINED SYMBOLS
+                            *ABS*:0000000000000001 ctxm4
+  startup/f4_reset.S:11     .text:0000000000000000 Reset_Handler
+  startup/f4_reset.S:11     .text:0000000000000000 $t
+  startup/f4_reset.S:18     .text:0000000000000006 loop_data
+  startup/f4_reset.S:29     .text:000000000000001a bloop
+  startup/f4_reset.S:56     *ABS*:0000000040023800 RCC_BASE
+  startup/f4_reset.S:57     *ABS*:0000000000000030 RCC_AHB1ENR
+  startup/f4_reset.S:59     *ABS*:0000000000000001 RCC_AHB1ENR_GPIOA_EN
+  startup/f4_reset.S:60     *ABS*:0000000000000002 RCC_AHB1ENR_GPIOB_EN
+  startup/f4_reset.S:61     *ABS*:0000000000000004 RCC_AHB1ENR_GPIOC_EN
+  startup/f4_reset.S:62     *ABS*:0000000000000008 RCC_AHB1ENR_GPIOD_EN
+  startup/f4_reset.S:63     *ABS*:0000000000000010 RCC_AHB1ENR_GPIOE_EN
+  startup/f4_reset.S:77     .text:0000000000000058 $d
+  startup/f4_reset.S:79     .text:000000000000005c $d
+
+UNDEFINED SYMBOLS
+__etext
+__data_start__
+__data_end__
+__bss_start__
+__bss_end__
+__libc_init_array
+atexit
+SystemInit
+main
+exit
+_fini

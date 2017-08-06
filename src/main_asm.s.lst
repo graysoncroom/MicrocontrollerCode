@@ -1,0 +1,302 @@
+   1              	# file: main_asm.s
+   2              	
+   3              	.include "macros.inc"
+   1              	# file: macros.inc
+   2              	
+  34              	  .list
+   4              	
+   5              	SET_TARGET
+   6              	
+   7              	/* Data {{{ */
+   8              	.data
+   9              	
+  10              	.equ GPIOA_BASE , 0x40020000
+  11              	.equ GPIOB_BASE , 0x40020400
+  12              	.equ GPIOC_BASE , 0x40020800
+  13              	.equ GPIOD_BASE , 0x40020c00
+  14              	.equ GPIOE_BASE , 0x40021000
+  15              	.equ GPIOF_BASE , 0x40021400
+  16              	.equ GPIOG_BASE , 0x40021800
+  17              	.equ GPIOH_BASE , 0x40021c00
+  18              	.equ GPIOI_BASE , 0x40022000
+  19              	.equ GPIOJ_BASE , 0x40022400
+  20              	.equ GPIOK_BASE , 0x40022800
+  21              	
+  22              	.equ GPIO_MODER   , 0x00
+  23              	.equ GPIO_OTYPER  , 0x04
+  24              	.equ GPIO_OSPEEDR , 0x08
+  25              	.equ GPIO_PUPDR   , 0x0c
+  26              	.equ GPIO_IDR     , 0x10
+  27              	.equ GPIO_ODR     , 0x14
+  28              	.equ GPIO_BSRR    , 0x18
+  29              	.equ GPIO_LCKR    , 0x1c
+  30              	.equ GPIO_AFRL    , 0x20
+  31              	.equ GPIO_AFRH    , 0x24
+  32              	
+  33              	/* GPIOD */
+  34              	.equ GREEN_LED  , 12
+  35              	.equ ORANGE_LED , 13
+  36              	.equ RED_LED    , 14
+  37              	.equ BLUE_LED   , 15
+  38              	
+  39              	/* GPIOA */
+  40              	.equ USER_BUTTON , 0
+  41              	
+  42              	/* }}} */
+  43              	/* Text {{{ */
+  44              	.text
+  45              	
+  46              	FUNCTION main,global
+  47 0000 10B5     	    push {r4, lr}
+  48              	
+  49 0002 3448     	    ldr r0, =GPIOD_BASE
+  50 0004 4FF00C01 	    ldr r1, =GREEN_LED
+  51 0008 00F070F8 	    bl  gpio_enable_output
+  52              	
+  53 000c 3148     	    ldr r0, =GPIOD_BASE
+  54 000e 4FF00D01 	    ldr r1, =ORANGE_LED
+  55 0012 00F06BF8 	    bl  gpio_enable_output
+  56              	
+  57 0016 2F48     	    ldr r0, =GPIOD_BASE
+  58 0018 4FF00E01 	    ldr r1, =RED_LED
+  59 001c 00F066F8 	    bl  gpio_enable_output
+  60              	
+  61 0020 2C48     	    ldr r0, =GPIOD_BASE
+  62 0022 4FF00F01 	    ldr r1, =BLUE_LED
+  63 0026 00F061F8 	    bl  gpio_enable_output
+  64              	
+  65 002a 2B48     	    ldr r0, =GPIOA_BASE
+  66 002c 4FF00001 	    ldr r1, =USER_BUTTON
+  67 0030 00F06AF8 	    bl gpio_enable_input
+  68              	
+  69              	    infinite_loop:
+  70 0034 2748     	        ldr r0, =GPIOD_BASE
+  71 0036 4FF00C01 	        ldr r1, =GREEN_LED
+  72 003a 00F08DF8 	        bl gpio_toggle_pin
+  73              	
+  74 003e 4FF40020 	        ldr r0, =(1<<19)
+  75 0042 00F04BF8 	        bl  sleep
+  76              	
+  77 0046 2348     	        ldr r0, =GPIOD_BASE
+  78 0048 4FF00D01 	        ldr r1, =ORANGE_LED
+  79 004c 00F084F8 	        bl gpio_toggle_pin
+  80              	
+  81 0050 4FF40020 	        ldr r0, =(1<<19)
+  82 0054 00F042F8 	        bl  sleep
+  83              	
+  84 0058 1E48     	        ldr r0, =GPIOD_BASE
+  85 005a 4FF00E01 	        ldr r1, =RED_LED
+  86 005e 00F07BF8 	        bl  gpio_toggle_pin
+  87              	
+  88 0062 4FF40020 	        ldr r0, =(1<<19)
+  89 0066 00F039F8 	        bl  sleep
+  90              	
+  91 006a 1A48     	        ldr r0, =GPIOD_BASE
+  92 006c 4FF00F01 	        ldr r1, =BLUE_LED
+  93 0070 00F072F8 	        bl  gpio_toggle_pin
+  94              	
+  95 0074 4FF40020 	        ldr r0, =(1<<19)
+  96 0078 00F030F8 	        bl  sleep
+  97              	
+  98 007c 1648     	        ldr r0, =GPIOA_BASE
+  99 007e 4FF00001 	        ldr r1, =USER_BUTTON
+ 100 0082 00F05BF8 	        bl  gpio_get_pin
+ 101 0086 E8B1     	        cbz r0, end_flashing_led_loop
+ 102              	
+ 103 0088 4FF01404 	        ldr r4, =20
+ 104              	        flash_loop:
+ 105 008c D4B1     	            cbz r4, end_flashing_led_loop
+ 106 008e A4F10104 	            sub r4, 1
+ 107 0092 1048     	            ldr r0, =GPIOD_BASE
+ 108 0094 4FF00C01 	            ldr r1, =GREEN_LED
+ 109 0098 00F05EF8 	            bl  gpio_toggle_pin
+ 110 009c 0D48     	            ldr r0, =GPIOD_BASE
+ 111 009e 4FF00D01 	            ldr r1, =ORANGE_LED
+ 112 00a2 00F059F8 	            bl  gpio_toggle_pin
+ 113 00a6 0B48     	            ldr r0, =GPIOD_BASE
+ 114 00a8 4FF00E01 	            ldr r1, =RED_LED
+ 115 00ac 00F054F8 	            bl  gpio_toggle_pin
+ 116 00b0 0848     	            ldr r0, =GPIOD_BASE
+ 117 00b2 4FF00F01 	            ldr r1, =BLUE_LED
+ 118 00b6 00F04FF8 	            bl  gpio_toggle_pin
+ 119              	
+ 120 00ba 4FF48010 	            ldr r0, =(1<<20)
+ 121 00be 00F00DF8 	            bl sleep
+ 122              	
+ 123 00c2 E3E7     	            b flash_loop
+ 124              	        end_flashing_led_loop:
+ 125              	
+ 126              	        button_is_not_pressed:
+ 127              	
+ 128 00c4 4FF40020 	        ldr r0, =(1<<19)
+ 129 00c8 00F008F8 	        bl  sleep
+ 130              	
+ 131 00cc B2E7     	        b infinite_loop
+ 132              	
+ 133 00ce BDE81040 	    pop {r4, lr}
+ 134 00d2 7047     	    bx  lr
+ 135 00d4 000C0240 	ENDFUNC main
+ 135      00000240 
+ 136              	
+ 137              	    /* sleep {{{
+ 138              	        r0: Time Delay */
+ 139              	    FUNCTION sleep
+ 140 00dc 00B5     	        push {lr}
+ 141              	        my_loop:
+ 142 00de 10B1     	            cbz r0, end_my_loop
+ 143 00e0 A0F10100 	            sub r0, 1
+ 144 00e4 FBE7     	            b my_loop
+ 145              	        end_my_loop:
+ 146 00e6 5DF804EB 	        pop {lr}
+ 147 00ea 7047     	        bx  lr
+ 148              	    ENDFUNC sleep /*}}}*/
+ 149              	    /* gpio_enable_output {{{
+ 150              	        r0: Port address
+ 151              	        r1: Bit number */
+ 152              	    FUNCTION gpio_enable_output
+ 153 00ec 10B5     	        push {r4, lr}
+ 154              	
+ 155              	        /* R1 <- (R1 * 2)
+ 156              	           R2 <- 1<<R2 */
+ 157 00ee 4FEA4101 	        lsl r1, 1
+ 158 00f2 4FF00102 	        ldr r2, =1
+ 159 00f6 02FA01F2 	        lsl r2, r1
+ 160              	
+ 161              	        /* R4 <- Mode Register Current Value
+ 162              	           R4 <- R2 | R4
+ 163              	           R4 -> Mode Register */
+ 164 00fa 0468     	        ldr r4, [r0, GPIO_MODER]
+ 165 00fc 44EA0204 	        orr r4, r2
+ 166 0100 0460     	        str r4, [r0, GPIO_MODER]
+ 167              	
+ 168 0102 BDE81040 	        pop {r4, lr}
+ 169 0106 7047     	        bx  lr
+ 170              	    ENDFUNC gpio_enable_output /*}}}*/
+ 171              	    /* gpio_enable_input {{{
+ 172              	        r0: Port address
+ 173              	        r1: Bit number */
+ 174              	    FUNCTION gpio_enable_input
+ 175 0108 10B5     	        push {r4, lr}
+ 176              	
+ 177              	        /* R1 <- (R1 * 2)
+ 178              	           R2 <- 10<<R2 */
+ 179 010a 4FEA4101 	        lsl r1, 1
+ 180 010e 4FF00002 	        ldr r2, =0
+ 181 0112 02FA01F2 	        lsl r2, r1
+ 182              	
+ 183              	        /* R4 <- Mode Register Current Value
+ 184              	           R4 <- R2 | R4
+ 185              	           R4 -> Mode Register */
+ 186 0116 0468     	        ldr r4, [r0, GPIO_MODER]
+ 187 0118 44EA0204 	        orr r4, r2
+ 188 011c 0460     	        str r4, [r0, GPIO_MODER]
+ 189              	
+ 190 011e BDE81040 	        pop {r4, lr}
+ 191 0122 7047     	        bx  lr
+ 192              	    ENDFUNC gpio_enable_input /*}}}*/
+ 193              	    /* gpio_set_pin {{{
+ 194              	        r0: Port address
+ 195              	        r1: Bit number */
+ 196              	    FUNCTION gpio_set_pin
+ 197 0124 10B5     	        push {r4, lr}
+ 198              	
+ 199              	        /* R2 <- 1<<R2 */
+ 200 0126 4FF00102 	        ldr r2, =1
+ 201 012a 02FA01F2 	        lsl r2, r1
+ 202              	
+ 203              	        /* R4 <- Output Data Register Current Value
+ 204              	           R4 <- R2 | R4
+ 205              	           R4 -> Output Data Register */
+ 206 012e 4469     	        ldr r4, [r0, GPIO_ODR]
+ 207 0130 44EA0204 	        orr r4, r2
+ 208 0134 4461     	        str r4, [r0, GPIO_ODR]
+ 209              	
+ 210 0136 BDE81040 	        pop {r4, lr}
+ 211 013a 7047     	        bx  lr
+ 212              	    ENDFUNC gpio_set_pin /*}}}*/
+ 213              	    /* gpio_get_pin {{{
+ 214              	        r0: Port address
+ 215              	        r1: Bit number
+ 216              	        Return r0: Value at pin */
+ 217              	    FUNCTION gpio_get_pin
+ 218 013c 00B5     	        push {lr}
+ 219              	
+ 220 013e 4FF00102 	        ldr r2, =1
+ 221 0142 02FA01F2 	        lsl r2, r1
+ 222              	
+ 223              	        /* R0 <- (Input Data Register Current Value) >> Bit number*/
+ 224 0146 0069     	        ldr r0, [r0, GPIO_IDR]
+ 225 0148 00EA0200 	        and r0,r2
+ 226 014c 20FA01F0 	        lsr r0, r1
+ 227              	
+ 228 0150 5DF804EB 	        pop {lr}
+ 229 0154 7047     	        bx  lr
+ 230              	    ENDFUNC gpio_get_pin
+ 231              	    /* gpio_toggle_pin {{{
+ 232              	    r0: Port address
+ 233              	    r1: Bit number */
+ 234 0156 00BF     	    FUNCTION gpio_toggle_pin
+ 235 0158 10B5     	        push {r4, lr}
+ 236              	
+ 237              	        /* R2 <- 1<<R2 */
+ 238 015a 4FF00102 	        ldr r2, =1
+ 239 015e 02FA01F2 	        lsl r2, r1
+ 240              	
+ 241              	        /* R4 <- Mode Register Current Value
+ 242              	           R4 <- R2 | R4
+ 243              	           R4 -> Mode Register */
+ 244 0162 4469     	        ldr r4, [r0, GPIO_ODR]
+ 245 0164 84EA0204 	        eor r4, r2
+ 246 0168 4461     	        str r4, [r0, GPIO_ODR]
+ 247              	
+ 248 016a BDE81040 	        pop {r4, lr}
+ 249 016e 7047     	        bx  lr
+ 250              	    ENDFUNC gpio_toggle_pin /*}}}*/
+ 251              	/*}}}*/
+ 252              	.end
+DEFINED SYMBOLS
+                            *ABS*:0000000000000001 ctxm4
+      src/main_asm.s:10     *ABS*:0000000040020000 GPIOA_BASE
+      src/main_asm.s:11     *ABS*:0000000040020400 GPIOB_BASE
+      src/main_asm.s:12     *ABS*:0000000040020800 GPIOC_BASE
+      src/main_asm.s:13     *ABS*:0000000040020c00 GPIOD_BASE
+      src/main_asm.s:14     *ABS*:0000000040021000 GPIOE_BASE
+      src/main_asm.s:15     *ABS*:0000000040021400 GPIOF_BASE
+      src/main_asm.s:16     *ABS*:0000000040021800 GPIOG_BASE
+      src/main_asm.s:17     *ABS*:0000000040021c00 GPIOH_BASE
+      src/main_asm.s:18     *ABS*:0000000040022000 GPIOI_BASE
+      src/main_asm.s:19     *ABS*:0000000040022400 GPIOJ_BASE
+      src/main_asm.s:20     *ABS*:0000000040022800 GPIOK_BASE
+      src/main_asm.s:22     *ABS*:0000000000000000 GPIO_MODER
+      src/main_asm.s:23     *ABS*:0000000000000004 GPIO_OTYPER
+      src/main_asm.s:24     *ABS*:0000000000000008 GPIO_OSPEEDR
+      src/main_asm.s:25     *ABS*:000000000000000c GPIO_PUPDR
+      src/main_asm.s:26     *ABS*:0000000000000010 GPIO_IDR
+      src/main_asm.s:27     *ABS*:0000000000000014 GPIO_ODR
+      src/main_asm.s:28     *ABS*:0000000000000018 GPIO_BSRR
+      src/main_asm.s:29     *ABS*:000000000000001c GPIO_LCKR
+      src/main_asm.s:30     *ABS*:0000000000000020 GPIO_AFRL
+      src/main_asm.s:31     *ABS*:0000000000000024 GPIO_AFRH
+      src/main_asm.s:34     *ABS*:000000000000000c GREEN_LED
+      src/main_asm.s:35     *ABS*:000000000000000d ORANGE_LED
+      src/main_asm.s:36     *ABS*:000000000000000e RED_LED
+      src/main_asm.s:37     *ABS*:000000000000000f BLUE_LED
+      src/main_asm.s:40     *ABS*:0000000000000000 USER_BUTTON
+      src/main_asm.s:46     .text:0000000000000000 main
+      src/main_asm.s:46     .text:0000000000000000 $t
+      src/main_asm.s:152    .text:00000000000000ec gpio_enable_output
+      src/main_asm.s:174    .text:0000000000000108 gpio_enable_input
+      src/main_asm.s:69     .text:0000000000000034 infinite_loop
+      src/main_asm.s:234    .text:0000000000000158 gpio_toggle_pin
+      src/main_asm.s:139    .text:00000000000000dc sleep
+      src/main_asm.s:217    .text:000000000000013c gpio_get_pin
+      src/main_asm.s:124    .text:00000000000000c4 end_flashing_led_loop
+      src/main_asm.s:104    .text:000000000000008c flash_loop
+      src/main_asm.s:126    .text:00000000000000c4 button_is_not_pressed
+      src/main_asm.s:135    .text:00000000000000d4 $d
+      src/main_asm.s:139    .text:00000000000000dc $t
+      src/main_asm.s:141    .text:00000000000000de my_loop
+      src/main_asm.s:145    .text:00000000000000e6 end_my_loop
+      src/main_asm.s:196    .text:0000000000000124 gpio_set_pin
+
+NO UNDEFINED SYMBOLS

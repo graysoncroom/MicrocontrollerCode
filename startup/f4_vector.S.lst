@@ -1,0 +1,255 @@
+   1              	# 1 "startup/f4_vector.S"
+   1              	/*
+   1              	...
+   0              	
+   0              	
+   2              	 * file: f4_vector.S
+   3              	 */
+   4              	
+   5              	  .include "macros.inc"
+   1              	# file: macros.inc
+   2              	
+  34              	  .list
+   6              	
+   7              	  .macro ISR_VECTOR handler:req,def_handler:vararg
+   8              	    .word	\handler
+   9              	    .ifnb	\def_handler
+  10              	      .weak		\handler
+  11              	      .thumb_set	\handler,\def_handler
+  12              	    .endif
+  13              	  .endm
+  14              	
+  15              	  SET_TARGET
+  16              	
+  17              	#  .global  g_pfnVectors
+  18              	
+  19              	/**
+  20              	 * @brief  This is the code that gets called when the processor receives an 
+  21              	 *         unexpected interrupt.  This simply enters an infinite loop, preserving
+  22              	 *         the system state for examination by a debugger.
+  23              	 * @param  None     
+  24              	 * @retval None       
+  25              	*/
+  26              	
+  27              	FUNCTION Default_Handler
+  28              	
+  29              	  Infinite_Loop:
+  30 0000 FEE7     	    b  Infinite_Loop
+  31              	
+  32              	ENDFUNC Default_Handler
+  33              	
+  34              	/******************************************************************************
+  35              	*
+  36              	* The minimal vector table for a Cortex M3. Note that the proper constructs
+  37              	* must be placed on this to ensure that it ends up at physical address
+  38              	* 0x0000.0000.
+  39              	* 
+  40              	*******************************************************************************/
+  41 0002 00BF     	   .section  .isr_vector,"a",%progbits
+  42              	  .type  g_pfnVectors, %object
+  43              	  .size  g_pfnVectors, .-g_pfnVectors
+  44              	    
+  45              	g_pfnVectors:
+  46 0000 00000000 	  ISR_VECTOR  __StackTop
+  47 0004 00000000 	  ISR_VECTOR  Reset_Handler, Default_Handler
+  48 0008 00000000 	  ISR_VECTOR  NMI_Handler, Default_Handler
+  49 000c 00000000 	  ISR_VECTOR  HardFault_Handler, Default_Handler
+  50 0010 00000000 	  ISR_VECTOR  MemManage_Handler, Default_Handler
+  51 0014 00000000 	  ISR_VECTOR  BusFault_Handler, Default_Handler
+  52 0018 00000000 	  ISR_VECTOR  UsageFault_Handler,Default_Handler
+  53 001c 00000000 	  ISR_VECTOR  0
+  54 0020 00000000 	  ISR_VECTOR  0
+  55 0024 00000000 	  ISR_VECTOR  0
+  56 0028 00000000 	  ISR_VECTOR  0
+  57 002c 00000000 	  ISR_VECTOR  SVC_Handler,Default_Handler
+  58 0030 00000000 	  ISR_VECTOR  DebugMon_Handler,Default_Handler
+  59 0034 00000000 	  ISR_VECTOR  0
+  60 0038 00000000 	  ISR_VECTOR  PendSV_Handler,Default_Handler
+  61 003c 00000000 	  ISR_VECTOR  SysTick_Handler,Default_Handler
+  62              	  
+  63              	  /* External Interrupts */
+  64 0040 00000000 	  ISR_VECTOR  WWDG_IRQHandler,Default_Handler                /* Window WatchDog                    
+  65 0044 00000000 	  ISR_VECTOR  PVD_IRQHandler,Default_Handler                 /* PVD through EXTI Line detection    
+  66 0048 00000000 	  ISR_VECTOR  TAMP_STAMP_IRQHandler,Default_Handler          /* Tamper and TimeStamps through the E
+  67 004c 00000000 	  ISR_VECTOR  RTC_WKUP_IRQHandler,Default_Handler            /* RTC Wakeup through the EXTI line   
+  68 0050 00000000 	  ISR_VECTOR  FLASH_IRQHandler,Default_Handler               /* FLASH                              
+  69 0054 00000000 	  ISR_VECTOR  RCC_IRQHandler,Default_Handler                 /* RCC                                
+  70 0058 00000000 	  ISR_VECTOR  EXTI0_IRQHandler,Default_Handler               /* EXTI Line0                         
+  71 005c 00000000 	  ISR_VECTOR  EXTI1_IRQHandler,Default_Handler               /* EXTI Line1                         
+  72 0060 00000000 	  ISR_VECTOR  EXTI2_IRQHandler,Default_Handler               /* EXTI Line2                         
+  73 0064 00000000 	  ISR_VECTOR  EXTI3_IRQHandler,Default_Handler               /* EXTI Line3                         
+  74 0068 00000000 	  ISR_VECTOR  EXTI4_IRQHandler,Default_Handler               /* EXTI Line4                         
+  75 006c 00000000 	  ISR_VECTOR  DMA1_Stream0_IRQHandler,Default_Handler        /* DMA1 Stream 0                      
+  76 0070 00000000 	  ISR_VECTOR  DMA1_Stream1_IRQHandler,Default_Handler        /* DMA1 Stream 1                      
+  77 0074 00000000 	  ISR_VECTOR  DMA1_Stream2_IRQHandler,Default_Handler        /* DMA1 Stream 2                      
+  78 0078 00000000 	  ISR_VECTOR  DMA1_Stream3_IRQHandler,Default_Handler        /* DMA1 Stream 3                      
+  79 007c 00000000 	  ISR_VECTOR  DMA1_Stream4_IRQHandler,Default_Handler        /* DMA1 Stream 4                      
+  80 0080 00000000 	  ISR_VECTOR  DMA1_Stream5_IRQHandler,Default_Handler        /* DMA1 Stream 5                      
+  81 0084 00000000 	  ISR_VECTOR  DMA1_Stream6_IRQHandler,Default_Handler        /* DMA1 Stream 6                      
+  82 0088 00000000 	  ISR_VECTOR  ADC_IRQHandler,Default_Handler                 /* ADC1, ADC2 and ADC3s               
+  83 008c 00000000 	  ISR_VECTOR  CAN1_TX_IRQHandler,Default_Handler             /* CAN1 TX                            
+  84 0090 00000000 	  ISR_VECTOR  CAN1_RX0_IRQHandler,Default_Handler            /* CAN1 RX0                           
+  85 0094 00000000 	  ISR_VECTOR  CAN1_RX1_IRQHandler,Default_Handler            /* CAN1 RX1                           
+  86 0098 00000000 	  ISR_VECTOR  CAN1_SCE_IRQHandler,Default_Handler            /* CAN1 SCE                           
+  87 009c 00000000 	  ISR_VECTOR  EXTI9_5_IRQHandler,Default_Handler             /* External Line[9:5]s                
+  88 00a0 00000000 	  ISR_VECTOR  TIM1_BRK_TIM9_IRQHandler,Default_Handler       /* TIM1 Break and TIM9                
+  89 00a4 00000000 	  ISR_VECTOR  TIM1_UP_TIM10_IRQHandler,Default_Handler       /* TIM1 Update and TIM10              
+  90 00a8 00000000 	  ISR_VECTOR  TIM1_TRG_COM_TIM11_IRQHandler,Default_Handler  /* TIM1 Trigger and Commutation and TI
+  91 00ac 00000000 	  ISR_VECTOR  TIM1_CC_IRQHandler,Default_Handler             /* TIM1 Capture Compare               
+  92 00b0 00000000 	  ISR_VECTOR  TIM2_IRQHandler,Default_Handler                /* TIM2                               
+  93 00b4 00000000 	  ISR_VECTOR  TIM3_IRQHandler,Default_Handler                /* TIM3                               
+  94 00b8 00000000 	  ISR_VECTOR  TIM4_IRQHandler,Default_Handler                /* TIM4                               
+  95 00bc 00000000 	  ISR_VECTOR  I2C1_EV_IRQHandler,Default_Handler             /* I2C1 Event                         
+  96 00c0 00000000 	  ISR_VECTOR  I2C1_ER_IRQHandler,Default_Handler             /* I2C1 Error                         
+  97 00c4 00000000 	  ISR_VECTOR  I2C2_EV_IRQHandler,Default_Handler             /* I2C2 Event                         
+  98 00c8 00000000 	  ISR_VECTOR  I2C2_ER_IRQHandler,Default_Handler             /* I2C2 Error                         
+  99 00cc 00000000 	  ISR_VECTOR  SPI1_IRQHandler,Default_Handler                /* SPI1                               
+ 100 00d0 00000000 	  ISR_VECTOR  SPI2_IRQHandler,Default_Handler                /* SPI2                               
+ 101 00d4 00000000 	  ISR_VECTOR  USART1_IRQHandler,Default_Handler              /* USART1                             
+ 102 00d8 00000000 	  ISR_VECTOR  USART2_IRQHandler,Default_Handler              /* USART2                             
+ 103 00dc 00000000 	  ISR_VECTOR  USART3_IRQHandler,Default_Handler              /* USART3                             
+ 104 00e0 00000000 	  ISR_VECTOR  EXTI15_10_IRQHandler,Default_Handler           /* External Line[15:10]s              
+ 105 00e4 00000000 	  ISR_VECTOR  RTC_Alarm_IRQHandler,Default_Handler           /* RTC Alarm (A and B) through EXTI Li
+ 106 00e8 00000000 	  ISR_VECTOR  OTG_FS_WKUP_IRQHandler,Default_Handler         /* USB OTG FS Wakeup through EXTI line
+ 107 00ec 00000000 	  ISR_VECTOR  TIM8_BRK_TIM12_IRQHandler,Default_Handler      /* TIM8 Break and TIM12               
+ 108 00f0 00000000 	  ISR_VECTOR  TIM8_UP_TIM13_IRQHandler,Default_Handler       /* TIM8 Update and TIM13              
+ 109 00f4 00000000 	  ISR_VECTOR  TIM8_TRG_COM_TIM14_IRQHandler,Default_Handler  /* TIM8 Trigger and Commutation and TI
+ 110 00f8 00000000 	  ISR_VECTOR  TIM8_CC_IRQHandler,Default_Handler             /* TIM8 Capture Compare               
+ 111 00fc 00000000 	  ISR_VECTOR  DMA1_Stream7_IRQHandler,Default_Handler        /* DMA1 Stream7                       
+ 112 0100 00000000 	  ISR_VECTOR  FSMC_IRQHandler,Default_Handler                /* FSMC                               
+ 113 0104 00000000 	  ISR_VECTOR  SDIO_IRQHandler,Default_Handler                /* SDIO                               
+ 114 0108 00000000 	  ISR_VECTOR  TIM5_IRQHandler,Default_Handler                /* TIM5                               
+ 115 010c 00000000 	  ISR_VECTOR  SPI3_IRQHandler,Default_Handler                /* SPI3                               
+ 116 0110 00000000 	  ISR_VECTOR  UART4_IRQHandler,Default_Handler               /* UART4                              
+ 117 0114 00000000 	  ISR_VECTOR  UART5_IRQHandler,Default_Handler               /* UART5                              
+ 118 0118 00000000 	  ISR_VECTOR  TIM6_DAC_IRQHandler,Default_Handler            /* TIM6 and DAC1&2 underrun errors    
+ 119 011c 00000000 	  ISR_VECTOR  TIM7_IRQHandler,Default_Handler                /* TIM7                               
+ 120 0120 00000000 	  ISR_VECTOR  DMA2_Stream0_IRQHandler,Default_Handler        /* DMA2 Stream 0                      
+ 121 0124 00000000 	  ISR_VECTOR  DMA2_Stream1_IRQHandler,Default_Handler        /* DMA2 Stream 1                      
+ 122 0128 00000000 	  ISR_VECTOR  DMA2_Stream2_IRQHandler,Default_Handler        /* DMA2 Stream 2                      
+ 123 012c 00000000 	  ISR_VECTOR  DMA2_Stream3_IRQHandler,Default_Handler        /* DMA2 Stream 3                      
+ 124 0130 00000000 	  ISR_VECTOR  DMA2_Stream4_IRQHandler,Default_Handler        /* DMA2 Stream 4                      
+ 125 0134 00000000 	  ISR_VECTOR  ETH_IRQHandler,Default_Handler                 /* Ethernet                           
+ 126 0138 00000000 	  ISR_VECTOR  ETH_WKUP_IRQHandler,Default_Handler            /* Ethernet Wakeup through EXTI line  
+ 127 013c 00000000 	  ISR_VECTOR  CAN2_TX_IRQHandler,Default_Handler             /* CAN2 TX                            
+ 128 0140 00000000 	  ISR_VECTOR  CAN2_RX0_IRQHandler,Default_Handler            /* CAN2 RX0                           
+ 129 0144 00000000 	  ISR_VECTOR  CAN2_RX1_IRQHandler,Default_Handler            /* CAN2 RX1                           
+ 130 0148 00000000 	  ISR_VECTOR  CAN2_SCE_IRQHandler,Default_Handler            /* CAN2 SCE                           
+ 131 014c 00000000 	  ISR_VECTOR  OTG_FS_IRQHandler,Default_Handler              /* USB OTG FS                         
+ 132 0150 00000000 	  ISR_VECTOR  DMA2_Stream5_IRQHandler,Default_Handler        /* DMA2 Stream 5                      
+ 133 0154 00000000 	  ISR_VECTOR  DMA2_Stream6_IRQHandler,Default_Handler        /* DMA2 Stream 6                      
+ 134 0158 00000000 	  ISR_VECTOR  DMA2_Stream7_IRQHandler,Default_Handler        /* DMA2 Stream 7                      
+ 135 015c 00000000 	  ISR_VECTOR  USART6_IRQHandler,Default_Handler              /* USART6                             
+ 136 0160 00000000 	  ISR_VECTOR  I2C3_EV_IRQHandler,Default_Handler             /* I2C3 event                         
+ 137 0164 00000000 	  ISR_VECTOR  I2C3_ER_IRQHandler,Default_Handler             /* I2C3 error                         
+ 138 0168 00000000 	  ISR_VECTOR  OTG_HS_EP1_OUT_IRQHandler,Default_Handler      /* USB OTG HS End Point 1 Out         
+ 139 016c 00000000 	  ISR_VECTOR  OTG_HS_EP1_IN_IRQHandler,Default_Handler       /* USB OTG HS End Point 1 In          
+ 140 0170 00000000 	  ISR_VECTOR  OTG_HS_WKUP_IRQHandler,Default_Handler         /* USB OTG HS Wakeup through EXTI     
+ 141 0174 00000000 	  ISR_VECTOR  OTG_HS_IRQHandler,Default_Handler              /* USB OTG HS                         
+ 142 0178 00000000 	  ISR_VECTOR  DCMI_IRQHandler,Default_Handler                /* DCMI                               
+ 143 017c 00000000 	  ISR_VECTOR  CRYP_IRQHandler,Default_Handler                /* CRYP crypto                        
+ 144 0180 00000000 	  ISR_VECTOR  HASH_RNG_IRQHandler,Default_Handler            /* Hash and Rng                       
+ 145 0184 00000000 	  ISR_VECTOR  FPU_IRQHandler,Default_Handler                 /* FPU                                
+ 146              	
+ 147              	  .end
+DEFINED SYMBOLS
+                            *ABS*:0000000000000001 ctxm4
+ startup/f4_vector.S:27     .text:0000000000000000 Default_Handler
+ startup/f4_vector.S:27     .text:0000000000000000 $t
+ startup/f4_vector.S:29     .text:0000000000000000 Infinite_Loop
+ startup/f4_vector.S:45     .isr_vector:0000000000000000 g_pfnVectors
+ startup/f4_vector.S:27     .text:0000000000000000 Reset_Handler
+ startup/f4_vector.S:27     .text:0000000000000000 NMI_Handler
+ startup/f4_vector.S:27     .text:0000000000000000 HardFault_Handler
+ startup/f4_vector.S:27     .text:0000000000000000 MemManage_Handler
+ startup/f4_vector.S:27     .text:0000000000000000 BusFault_Handler
+ startup/f4_vector.S:27     .text:0000000000000000 UsageFault_Handler
+ startup/f4_vector.S:27     .text:0000000000000000 SVC_Handler
+ startup/f4_vector.S:27     .text:0000000000000000 DebugMon_Handler
+ startup/f4_vector.S:27     .text:0000000000000000 PendSV_Handler
+ startup/f4_vector.S:27     .text:0000000000000000 SysTick_Handler
+ startup/f4_vector.S:27     .text:0000000000000000 WWDG_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 PVD_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TAMP_STAMP_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 RTC_WKUP_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 FLASH_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 RCC_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 EXTI0_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 EXTI1_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 EXTI2_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 EXTI3_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 EXTI4_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA1_Stream0_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA1_Stream1_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA1_Stream2_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA1_Stream3_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA1_Stream4_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA1_Stream5_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA1_Stream6_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 ADC_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 CAN1_TX_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 CAN1_RX0_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 CAN1_RX1_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 CAN1_SCE_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 EXTI9_5_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TIM1_BRK_TIM9_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TIM1_UP_TIM10_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TIM1_TRG_COM_TIM11_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TIM1_CC_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TIM2_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TIM3_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TIM4_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 I2C1_EV_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 I2C1_ER_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 I2C2_EV_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 I2C2_ER_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 SPI1_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 SPI2_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 USART1_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 USART2_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 USART3_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 EXTI15_10_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 RTC_Alarm_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 OTG_FS_WKUP_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TIM8_BRK_TIM12_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TIM8_UP_TIM13_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TIM8_TRG_COM_TIM14_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TIM8_CC_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA1_Stream7_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 FSMC_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 SDIO_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TIM5_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 SPI3_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 UART4_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 UART5_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TIM6_DAC_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 TIM7_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA2_Stream0_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA2_Stream1_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA2_Stream2_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA2_Stream3_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA2_Stream4_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 ETH_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 ETH_WKUP_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 CAN2_TX_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 CAN2_RX0_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 CAN2_RX1_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 CAN2_SCE_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 OTG_FS_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA2_Stream5_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA2_Stream6_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DMA2_Stream7_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 USART6_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 I2C3_EV_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 I2C3_ER_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 OTG_HS_EP1_OUT_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 OTG_HS_EP1_IN_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 OTG_HS_WKUP_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 OTG_HS_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 DCMI_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 CRYP_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 HASH_RNG_IRQHandler
+ startup/f4_vector.S:27     .text:0000000000000000 FPU_IRQHandler
+
+UNDEFINED SYMBOLS
+__StackTop

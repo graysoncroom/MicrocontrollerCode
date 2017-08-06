@@ -1,0 +1,140 @@
+# ARM Project Makefile V.4
+#------------------------------------------
+# hw version
+
+ifeq (,$(wildcard ./mode.hw))
+	MODE:=sim
+else
+	MODE:=hw
+endif
+
+# PATHS
+ARM-PATH  := /usr/local/arm/toolchain
+OOCD-PATH := /usr/local
+QEMU-PATH := /usr
+
+# COMMANDS
+CC      := $(ARM-PATH)/bin/arm-none-eabi-gcc
+GDB     := $(ARM-PATH)/bin/arm-none-eabi-gdb
+OBJDUMP := $(ARM-PATH)/bin/arm-none-eabi-objdump
+#OPENOCD := $(OOCD-PATH)/bin/openocd
+OPENOCD := openocd
+QEMU    := $(QEMU-PATH)/bin/qemu-system-arm
+
+# DEFS
+OBJDIR  := bin
+
+ifeq ($(MODE),hw)
+  SRCS += f4_vector.S f4_reset.S
+  CFLAGS  := -g -Wall -O0 -std=c99
+  CFLAGS  += -Xassembler --defsym -Xassembler ctxm4=1
+  CFLAGS  += -mthumb -mcpu=cortex-m4 --specs=nosys.specs
+  LDFLAGS := -g -Wl,-Map,$(OBJDIR)/$(PROJ_NAME).map -Wl,--gc-sections
+  LDFLAGS += -T startup/f4.ld
+else
+  SRCS += f4_vector.S f4_reset.S
+  CFLAGS  := -g -Wall -O0 -std=c99
+  CFLAGS  += -Xassembler --defsym -Xassembler ctxm4=1
+  CFLAGS  += -mthumb -mcpu=cortex-m4 --specs=nosys.specs
+  LDFLAGS := -g -Wl,-Map,$(OBJDIR)/$(PROJ_NAME).map -Wl,--gc-sections
+  LDFLAGS += -T startup/f4.ld
+endif
+
+DEFINES := 
+
+OBJS := $(SRCS:.c=.o)
+OBJS := $(OBJS:.s=.o)
+OBJS := $(OBJS:.S=.o)
+OBJS := $(addprefix $(OBJDIR)/,$(OBJS))
+OBJS += startup/seg7.o
+
+BNAME := $(OBJDIR)/$(PGM)
+ELF   := $(BNAME).elf 
+DIS   := $(BNAME).dis
+
+SRC_PATHS := . src startup
+INC_PATHS := . src startup
+
+INCLUDES := $(addprefix -I ,$(INC_PATHS))
+
+vpath %.c $(SRC_PATHS)
+vpath %.s $(SRC_PATHS)
+vpath %.S $(SRC_PATHS)
+vpath %.h $(INC_PATHS)
+
+.PRECIOUS: $(OBJDIR)/%.o
+
+# TARGETS -- build
+all: $(ELF) ;
+	@echo "$(ELF) : $(SRCS) : $(OBJS)"
+
+$(OBJDIR)/%.elf: $(OBJS) | $(OBJDIR)
+	$(CC) $(CFLAGS) $(DEFINES) $(LDFLAGS) -o $@ $^
+	$(OBJDUMP) -dS $@ > $@.objdump
+
+$(OBJDIR)/%.o: %.c | $(OBJDIR)
+	$(CC) -c $(CFLAGS) $(DEFINES) $(INCLUDES) -o $@ $^
+
+# handle upper and lower case assembly extensions
+$(OBJDIR)/%.o: %.s | $(OBJDIR)
+	$(CC) -c $(CFLAGS) $(DEFINES) $(INCLUDES) -Wa,-ahlns=$?.lst -o $@ $^
+	
+$(OBJDIR)/%.o: %.S | $(OBJDIR)
+	$(CC) -c $(CFLAGS) $(DEFINES) $(INCLUDES) -Wa,-ahlns=$?.lst -o $@ $^
+
+$(OBJDIR):
+	mkdir -p $@
+
+# TARGETS -- command
+## Strange workaround required to redirect stderr & stdout to /dev/null in make
+
+gdb_server:
+ifeq ($(MODE),hw)
+	@killall -q openocd || true # silent killer
+	@($(OPENOCD) -f board/stm32f4discovery.cfg 2>&1) > openocd.log &
+endif
+
+debug: $(ELF) | gdb_server
+ifeq ($(MODE),hw)
+	$(GDB) -q -x debug-hw.gdb $<
+	@killall -v openocd
+else
+	$(GDB) -q -x debug-sim.gdb $<
+endif
+
+stop-qemu:
+	@killall -q $(QEMU) || true
+
+debug-sim: $(ELF)
+	$(GDB) -q -x debug-sim.gdb $<
+	
+JUNK := `find . | grep '\~'`
+clean: 
+	@rm -fr $(OBJDIR)
+	@rm -f $(JUNK)
+	@rm -f startup/*.lst
+	@rm -f src/*.lst
+
+show:
+	@echo SRC_PATHS: $(SRC_PATHS)
+	@echo INC_PATHS: $(INC_PATHS)
+	@echo INCLUDES:  $(INCLUDES)
+	@echo OBJS:      $(OBJS)
+	@echo OBJDIR:    $(OBJDIR)
+	@echo SRCS:      $(SRCS)
+mode:
+ifeq ($(MODE),hw)
+	@echo "hardware mode"
+else
+	@echo "simulation mode"
+endif
+
+switch:	clean
+ifeq ($(MODE),hw)
+	@rm mode.hw
+	@echo mode changed to simulation
+else
+	@touch mode.hw
+	@echo mode changed to hardware
+endif
+
